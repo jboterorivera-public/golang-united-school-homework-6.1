@@ -1,279 +1,249 @@
 package golang_united_school_homework
 
 import (
+	"fmt"
+	"math"
 	"reflect"
 	"testing"
 )
 
-func TestBoxCapacity(t *testing.T) {
-	capacity := 7
+func TestBox_AddShape(t *testing.T) {
+	circle := &Circle{}
+	box := NewBox(1)
 
-	box := *NewBox(capacity)
+	actualErr := box.AddShape(circle)
 
-	want := capacity
-	got := box.shapesCapacity
-
-	if got != want {
-		t.Errorf("TestBoxCapacity got: %v, want: %v", got, want)
+	if len(box.shapes) != 1 {
+		t.Errorf("the expected length is 1, but actual %d", len(box.shapes))
+	}
+	if actualErr != nil {
+		t.Errorf("could not add shape to the box %v", actualErr)
 	}
 }
 
-func TestAddShapes(t *testing.T) {
-	capacity := 2
+func TestBox_AddShape_ErrAddMoreThanMax(t *testing.T) {
+	circle := &Circle{}
+	triangle := &Triangle{}
+	rectangle := &Rectangle{}
+	box := NewBox(2)
 
-	box := *NewBox(capacity)
-	box.AddShape(Rectangle{Height: 4, Weight: 6})
-	box.AddShape(Triangle{Side: 5})
+	_ = box.AddShape(circle)
+	_ = box.AddShape(triangle)
+	actualErr := box.AddShape(rectangle)
 
-	want := capacity
-	got := len(box.shapes)
-
-	if got != want {
-		t.Errorf("TestAddShapes got: %v, want: %v", got, want)
+	if actualErr == nil {
+		t.Errorf("added more than max elements, but error has not been received")
 	}
 }
 
-func TestAddShapeNoSpaceToAddShapes(t *testing.T) {
-	capacity := 1
+func TestBox_GetByIndex(t *testing.T) {
+	circle := &Circle{Radius: 20}
+	triangle := &Triangle{Side: 30}
+	rectangle := &Rectangle{Height: 10, Weight: 20}
+	box := NewBox(3)
 
-	box := *NewBox(capacity)
-	box.AddShape(Rectangle{Height: 4, Weight: 6})
+	_ = box.AddShape(circle)
+	_ = box.AddShape(triangle)
+	_ = box.AddShape(rectangle)
+	actualShape, actualErr := box.GetByIndex(1)
 
-	want := errorNoSpaceForShapes
-	got := box.AddShape(Triangle{Side: 5})
-
-	if got.Error() != want.Error() {
-		t.Errorf("TestAddShapeNoSpaceToAddShapes got: %v, want: %v", got, want)
+	if len(box.shapes) != 3 {
+		t.Errorf("the expected length is 3, but actual %d", len(box.shapes))
+	}
+	if actualErr != nil {
+		t.Errorf("received unexpected err %v", actualErr)
+	}
+	if !reflect.DeepEqual(actualShape, triangle) {
+		t.Errorf("expected to get %v, but actual is %v", triangle, actualShape)
 	}
 }
 
-func TestGetByIndex(t *testing.T) {
-	capacity := 3
+func TestBox_GetByIndex_ErrShapeIsNotFound(t *testing.T) {
+	circle := &Circle{Radius: 20}
+	triangle := &Triangle{Side: 30}
+	rectangle := &Rectangle{Height: 10, Weight: 20}
+	box := NewBox(3)
 
-	box := *NewBox(capacity)
+	_ = box.AddShape(circle)
+	_ = box.AddShape(triangle)
+	_ = box.AddShape(rectangle)
+	actualShape, actualErr := box.GetByIndex(3)
 
-	s := Rectangle{Height: 8, Weight: 10}
-
-	box.AddShape(Rectangle{Height: 4, Weight: 6})
-	box.AddShape(s)
-	box.AddShape(Triangle{Side: 5})
-
-	want := s
-	got, _ := box.GetByIndex(1)
-
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("TestGetByIndex got: %v, want: %v", got, want)
+	if len(box.shapes) != 3 {
+		t.Errorf("the expected length is 3, but actual %d", len(box.shapes))
+	}
+	if actualErr == nil {
+		t.Errorf("expected to get an error, but error has not been received")
+	}
+	if actualShape != nil {
+		t.Errorf("expected to get nil, but actual is %v", actualShape)
 	}
 }
 
-func TestGetByIndexCountShapes(t *testing.T) {
-	capacity := 3
+func TestBox_ExtractByNumber(t *testing.T) {
+	circle := &Circle{Radius: 20}
+	triangle := &Triangle{Side: 30}
+	rectangle := &Rectangle{Height: 10, Weight: 20}
+	box := NewBox(3)
 
-	box := *NewBox(capacity)
+	_ = box.AddShape(circle)
+	_ = box.AddShape(triangle)
+	_ = box.AddShape(rectangle)
+	actualShape, actualErr := box.ExtractByIndex(1)
 
-	box.AddShape(Rectangle{Height: 4, Weight: 6})
-	box.AddShape(Rectangle{Height: 8, Weight: 10})
-	box.AddShape(Triangle{Side: 5})
-
-	want := 3
-	box.GetByIndex(1)
-	got := len(box.shapes)
-
-	if got != want {
-		t.Errorf("TestGetByIndexCountShapes got: %v, want: %v", got, want)
+	if len(box.shapes) != 2 {
+		t.Errorf("the expected length is 2, but actual %d", len(box.shapes))
+	}
+	if !reflect.DeepEqual(actualShape, triangle) {
+		t.Errorf("expected to get %v, but actual is %v", triangle, actualShape)
+	}
+	if actualErr != nil {
+		t.Errorf("received unexpected err %v", actualErr)
 	}
 }
 
-func TestGetByIndexOutOfIndex(t *testing.T) {
-	capacity := 3
+func TestBox_ExtractByNumber_ErrOutOfRange(t *testing.T) {
+	circle := &Circle{Radius: 20}
+	triangle := &Triangle{Side: 30}
+	rectangle := &Rectangle{Height: 10, Weight: 20}
+	box := NewBox(3)
 
-	box := *NewBox(capacity)
+	_ = box.AddShape(circle)
+	_ = box.AddShape(triangle)
+	_ = box.AddShape(rectangle)
+	actualShape, actualErr := box.ExtractByIndex(3)
 
-	box.AddShape(Rectangle{Height: 8, Weight: 10})
-	box.AddShape(Triangle{Side: 5})
-
-	want := errorElementOutOfIndex
-	_, got := box.GetByIndex(2)
-
-	if got.Error() != want.Error() {
-		t.Errorf("TestGetByIndexOutOfIndex got: %v, want: %v", got, want)
+	if len(box.shapes) != 3 {
+		t.Errorf("the expected length is 3, but actual %d", len(box.shapes))
+	}
+	if actualShape != nil {
+		t.Errorf("expected to get nil, but actual is %v", actualShape)
+	}
+	if actualErr == nil {
+		t.Errorf("expected to get an error")
 	}
 }
 
-func TestExtractByIndexCompareShape(t *testing.T) {
-	capacity := 3
+func TestBox_ReplaceByIndex(t *testing.T) {
+	circle := &Circle{Radius: 20}
+	triangle := &Triangle{Side: 30}
+	rectangle := &Rectangle{Height: 10, Weight: 20}
+	rectangle2 := &Rectangle{}
+	box := NewBox(3)
 
-	box := *NewBox(capacity)
+	_ = box.AddShape(circle)
+	_ = box.AddShape(triangle)
+	_ = box.AddShape(rectangle)
+	actualShape, actualErr := box.ReplaceByIndex(2, rectangle2)
 
-	s := Rectangle{Height: 8, Weight: 10}
-
-	box.AddShape(Rectangle{Height: 4, Weight: 6})
-	box.AddShape(s)
-	box.AddShape(Triangle{Side: 5})
-
-	want := s
-	got, _ := box.ExtractByIndex(1)
-
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("TestExtractByIndexCompareShape got: %v, want: %v", got, want)
+	if len(box.shapes) != 3 {
+		t.Errorf("the expected length is 3, but actual %d", len(box.shapes))
+	}
+	if !reflect.DeepEqual(actualShape, rectangle) {
+		t.Errorf("expected to get %v, but actual is %v", triangle, actualShape)
+	}
+	if actualErr != nil {
+		t.Errorf("received unexpected err %v", actualErr)
 	}
 }
 
-func TestExtractByIndexCountShapes(t *testing.T) {
-	capacity := 3
+func TestBox_ReplaceByIndex_ErrOutOfRange(t *testing.T) {
+	circle := &Circle{Radius: 20}
+	triangle := &Triangle{Side: 30}
+	rectangle := &Rectangle{Height: 10, Weight: 20}
+	rectangle2 := &Rectangle{Height: 10, Weight: 20}
+	box := NewBox(3)
 
-	box := *NewBox(capacity)
+	_ = box.AddShape(circle)
+	_ = box.AddShape(triangle)
+	_ = box.AddShape(rectangle)
+	_ = box.AddShape(rectangle2)
+	actualShape, actualErr := box.ReplaceByIndex(3, rectangle2)
 
-	box.AddShape(Rectangle{Height: 4, Weight: 6})
-	box.AddShape(Rectangle{Height: 8, Weight: 10})
-	box.AddShape(Triangle{Side: 5})
-
-	want := 2
-	box.ExtractByIndex(1)
-	got := len(box.shapes)
-
-	if got != want {
-		t.Errorf("TestExtractByIndexCountShapes got: %v, want: %v", got, want)
+	if len(box.shapes) != 3 {
+		t.Errorf("the expected length is 3, but actual %d", len(box.shapes))
+	}
+	if actualShape != nil {
+		t.Errorf("expected to get nil, but actual is %v", actualShape)
+	}
+	if actualErr == nil {
+		t.Errorf("expected to get an error")
 	}
 }
 
-func TestExtractByIndexOutOfIndex(t *testing.T) {
-	capacity := 3
+func TestBox_SumPerimeter(t *testing.T) {
+	circle := &Circle{Radius: 20}
+	triangle := &Triangle{Side: 30}
+	rectangle := &Rectangle{Height: 10, Weight: 20}
+	box := NewBox(3)
+	_ = box.AddShape(circle)
+	_ = box.AddShape(triangle)
+	_ = box.AddShape(rectangle)
+	expectedSumPerimeter := (math.Pi * 40) + 90 + 60
 
-	box := *NewBox(capacity)
+	actualSumPerimeter := box.SumPerimeter()
 
-	box.AddShape(Rectangle{Height: 8, Weight: 10})
-	box.AddShape(Triangle{Side: 5})
-
-	want := errorElementOutOfIndex
-	_, got := box.ExtractByIndex(2)
-
-	if got.Error() != want.Error() {
-		t.Errorf("TestExtractByIndexOutOfIndex got: %v, want: %v", got, want)
+	if expectedSumPerimeter != actualSumPerimeter {
+		t.Errorf("expected to get %f, but actual is: %f", expectedSumPerimeter, actualSumPerimeter)
 	}
 }
 
-func TestReplaceByIndex(t *testing.T) {
-	capacity := 3
+func TestBox_SumArea(t *testing.T) {
+	circle := &Circle{Radius: 20}
+	triangle := &Triangle{Side: 30}
+	rectangle := &Rectangle{Height: 10, Weight: 20}
+	box := NewBox(3)
+	_ = box.AddShape(circle)
+	_ = box.AddShape(triangle)
+	_ = box.AddShape(rectangle)
+	var expectedSumArea = (math.Pi * 400) + 200 + (math.Sqrt(3) / 4 * 900)
 
-	box := *NewBox(capacity)
+	actualSumArea := box.SumArea()
 
-	s := Rectangle{Height: 8, Weight: 10}
-	sAux := Circle{Radius: 78}
-
-	box.AddShape(Rectangle{Height: 8, Weight: 6})
-	box.AddShape(s)
-	box.AddShape(Triangle{Side: 5})
-
-	want := s
-	got, _ := box.ReplaceByIndex(1, sAux)
-
-	if got != want {
-		t.Errorf("TestReplaceByIndex got: %v, want: %v", got, want)
+	if expectedSumArea != actualSumArea {
+		t.Errorf("expected to get %f, but actual is: %f", expectedSumArea, actualSumArea)
 	}
 }
 
-func TestReplaceByIndexOutOfIndex(t *testing.T) {
-	capacity := 3
+func TestBox_RemoveAllCircles(t *testing.T) {
+	circle1 := &Circle{Radius: 20}
+	circle2 := &Circle{Radius: 30}
+	circle3 := &Circle{Radius: 5}
+	circle4 := &Circle{Radius: 2}
+	triangle := &Triangle{Side: 30}
+	rectangle := &Rectangle{Height: 10, Weight: 20}
+	box := NewBox(6)
+	_ = box.AddShape(circle1)
+	_ = box.AddShape(circle2)
+	_ = box.AddShape(circle3)
+	_ = box.AddShape(circle4)
+	_ = box.AddShape(triangle)
+	_ = box.AddShape(rectangle)
 
-	box := *NewBox(capacity)
+	actualErr := box.RemoveAllCircles()
 
-	box.AddShape(Rectangle{Height: 8, Weight: 10})
-	box.AddShape(Triangle{Side: 5})
-
-	s := Circle{Radius: 78}
-
-	want := errorElementOutOfIndex
-	_, got := box.ReplaceByIndex(2, s)
-
-	if got.Error() != want.Error() {
-		t.Errorf("TestReplaceByIndexOutOfIndex got: %v, want: %v", got, want)
+	if len(box.shapes) != 2 {
+		fmt.Println(box.shapes)
+		t.Errorf("expected length is 2, but received %d", len(box.shapes))
+	}
+	if actualErr != nil {
+		t.Errorf("received unexpected err %v", actualErr)
 	}
 }
 
-func TestSumPerimeter(t *testing.T) {
-	capacity := 3
+func TestBox_RemoveAllCircles_ErrCirclesDoNotExist(t *testing.T) {
+	triangle := &Triangle{}
+	rectangle := &Rectangle{}
+	box := NewBox(2)
+	_ = box.AddShape(triangle)
+	_ = box.AddShape(rectangle)
 
-	box := *NewBox(capacity)
+	actualErr := box.RemoveAllCircles()
 
-	box.AddShape(Rectangle{Height: 8, Weight: 10})
-	box.AddShape(Triangle{Side: 5})
-	box.AddShape(Circle{Radius: 7})
-
-	want := 94.9822971502571
-	got := (float64)(0)
-	for _, s := range box.shapes {
-		got += s.CalcPerimeter()
+	if len(box.shapes) != 2 {
+		t.Errorf("expected length is 2, but received %d", len(box.shapes))
 	}
-
-	if got != want {
-		t.Errorf("TestSumPerimeter got: %v, want: %v", got, want)
-	}
-}
-
-func TestSumArea(t *testing.T) {
-	capacity := 3
-
-	box := *NewBox(capacity)
-
-	box.AddShape(Rectangle{Height: 8, Weight: 10})
-	box.AddShape(Triangle{Side: 5})
-	box.AddShape(Circle{Radius: 7})
-
-	want := 244.76335757320533
-	got := (float64)(0)
-	for _, s := range box.shapes {
-		got += s.CalcArea()
-	}
-
-	if got != want {
-		t.Errorf("TestSumArea got: %v, want: %v", got, want)
-	}
-}
-
-func TestRemoveCircles(t *testing.T) {
-	capacity := 6
-
-	b := *NewBox(capacity)
-
-	b.AddShape(Rectangle{Height: 8, Weight: 10})
-	b.AddShape(Triangle{Side: 5})
-	b.AddShape(Circle{Radius: 7})
-	b.AddShape(Rectangle{Height: 9, Weight: 11})
-	b.AddShape(Triangle{Side: 6})
-	b.AddShape(Circle{Radius: 8})
-
-	b.RemoveAllCircles()
-
-	for _, s := range b.shapes {
-		_, ok := s.(Circle)
-		if ok {
-			t.Errorf("TestRemoveCircles, the box still contains Circles in its shapes")
-		}
-	}
-
-	want := 4
-	got := len(b.shapes)
-
-	if got != want {
-		t.Errorf("TestRemoveCircles got: %v, want: %v", got, want)
-	}
-}
-
-func TestRemoveCirclesInShapesWithoutCircles(t *testing.T) {
-	capacity := 4
-
-	box := *NewBox(capacity)
-
-	box.AddShape(Rectangle{Height: 8, Weight: 10})
-	box.AddShape(Triangle{Side: 5})
-	box.AddShape(Rectangle{Height: 9, Weight: 11})
-	box.AddShape(Triangle{Side: 6})
-
-	want := errorNoShapestoRemove
-	got := box.RemoveAllCircles()
-
-	if got.Error() != want.Error() {
-		t.Errorf("TestRemoveCirclesInShapesWithoutCircles got: %v, want: %v", got, want)
+	if actualErr == nil {
+		t.Errorf("expected to get an error, but actual is nil %v", actualErr)
 	}
 }

@@ -1,5 +1,7 @@
 package golang_united_school_homework
 
+import "reflect"
+
 // box contains list of shapes and able to perform operations on them
 type box struct {
 	shapes         []Shape
@@ -127,17 +129,14 @@ func (b *box) SumArea() float64 {
 func (b *box) RemoveAllCircles() error {
 	boxAux := *NewBox(b.shapesCapacity)
 
-	counter := 0
+	c := &Circle{}
 	for _, s := range b.shapes {
-		_, ok := s.(Circle)
-		if !ok {
+		if !(reflect.TypeOf(s) == reflect.TypeOf(c)) {
 			boxAux.shapes = append(boxAux.shapes, s)
-		} else {
-			counter++
 		}
 	}
 
-	if counter == 0 {
+	if len(boxAux.shapes) == len(b.shapes) {
 		return customError(errorNoShapestoRemove)
 	}
 
