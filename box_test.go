@@ -234,18 +234,18 @@ func TestSumArea(t *testing.T) {
 func TestRemoveCircles(t *testing.T) {
 	capacity := 6
 
-	box := *NewBox(capacity)
+	b := *NewBox(capacity)
 
-	box.AddShape(Rectangle{Height: 8, Weight: 10})
-	box.AddShape(Triangle{Side: 5})
-	box.AddShape(Circle{Radius: 7})
-	box.AddShape(Rectangle{Height: 9, Weight: 11})
-	box.AddShape(Triangle{Side: 6})
-	box.AddShape(Circle{Radius: 8})
+	b.AddShape(Rectangle{Height: 8, Weight: 10})
+	b.AddShape(Triangle{Side: 5})
+	b.AddShape(Circle{Radius: 7})
+	b.AddShape(Rectangle{Height: 9, Weight: 11})
+	b.AddShape(Triangle{Side: 6})
+	b.AddShape(Circle{Radius: 8})
 
-	box.RemoveAllCircles()
+	b.RemoveAllCircles()
 
-	for _, s := range box.shapes {
+	for _, s := range b.shapes {
 		_, ok := s.(Circle)
 		if ok {
 			t.Errorf("TestRemoveCircles, the box still contains Circles in its shapes")
@@ -253,7 +253,7 @@ func TestRemoveCircles(t *testing.T) {
 	}
 
 	want := 4
-	got := len(box.shapes)
+	got := len(b.shapes)
 
 	if got != want {
 		t.Errorf("TestRemoveCircles got: %v, want: %v", got, want)
